@@ -5,6 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.github.damontecres.wholphin.custom.hiddenvault.ui.HiddenVaultContent
+import com.github.damontecres.wholphin.custom.hiddenvault.ui.rememberHiddenVaultAccess
 import com.github.damontecres.wholphin.data.filter.DefaultForGenresFilterOptions
 import com.github.damontecres.wholphin.data.filter.DefaultForStudiosFilterOptions
 import com.github.damontecres.wholphin.data.model.SeerrItemType
@@ -68,6 +70,8 @@ fun DestinationContent(
     if (destination.fullScreen) {
         LaunchedEffect(Unit) { onClearBackdrop.invoke() }
     }
+    // hidden-vault: detail gate, hidden items open only inside their own vault
+    if (!rememberHiddenVaultAccess(destination, modifier)) return
     when (destination) {
         is Destination.Home -> {
             HomePage(
@@ -373,6 +377,11 @@ fun DestinationContent(
 
         Destination.Debug -> {
             DebugPage(preferences, modifier)
+        }
+
+        // hidden-vault: the vault's own pages
+        is Destination.HiddenVault -> {
+            HiddenVaultContent(destination.route, preferences, modifier)
         }
 
         Destination.Discover -> {

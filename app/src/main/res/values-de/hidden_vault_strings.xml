@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- hidden-vault: deutsche Texte des Hidden Content Vault (eigene Datei, kein Weblate-Konflikt) -->
+<resources>
+    <string name="hidden_vault_entry_title">Gerät</string>
+    <string name="hidden_vault_pin_title">PIN eingeben</string>
+    <string name="hidden_vault_pin_create">PIN festlegen</string>
+    <string name="hidden_vault_pin_confirm">PIN wiederholen</string>
+    <string name="hidden_vault_pin_hint">4 Ziffern oder Pfeile</string>
+    <string name="hidden_vault_pin_mismatch">Die PINs stimmen nicht überein</string>
+    <string name="hidden_vault_pin_wrong">Falsche PIN</string>
+    <string name="hidden_vault_pin_locked">Zu viele Versuche. Erneut in %1$d s</string>
+    <string name="hidden_vault_private_area">Privater Bereich</string>
+    <string name="hidden_vault_areas">Bereiche</string>
+    <string name="hidden_vault_no_areas">Noch keine Bereiche</string>
+    <string name="hidden_vault_add_area">Bereich hinzufügen</string>
+    <string name="hidden_vault_edit_area">%1$s bearbeiten</string>
+    <string name="hidden_vault_settings">Einstellungen</string>
+    <string name="hidden_vault_this_device">Dieses Gerät</string>
+    <string name="hidden_vault_auto_lock">Sperren nach Inaktivität</string>
+    <string name="hidden_vault_minutes">%1$d min</string>
+    <string name="hidden_vault_lock_on_leave">Beim Verlassen sperren</string>
+    <string name="hidden_vault_hide_watched">Gesehene ausblenden</string>
+    <string name="hidden_vault_hide_watched_summary">Reihen, Raster und Suche zeigen nur Ungesehenes</string>
+    <string name="hidden_vault_sync">Mit anderen Geräten synchronisieren</string>
+    <string name="hidden_vault_change_pin">PIN ändern</string>
+    <string name="hidden_vault_lock_now">Sperren</string>
+    <string name="hidden_vault_on">An</string>
+    <string name="hidden_vault_off">Aus</string>
+    <string name="hidden_vault_continue_watching">Weiterschauen</string>
+    <string name="hidden_vault_next_up">Als Nächstes</string>
+    <string name="hidden_vault_recently_added">Zuletzt hinzugefügt</string>
+    <string name="hidden_vault_search">Suche</string>
+    <string name="hidden_vault_libraries">Bibliotheken</string>
+    <string name="hidden_vault_name">Name</string>
+    <string name="hidden_vault_hidden_tags">Versteckte Tags in %1$s</string>
+    <string name="hidden_vault_tags_selected">%1$d ausgewählt</string>
+    <string name="hidden_vault_filter_tags">Tags filtern</string>
+    <string name="hidden_vault_add_tag">Tag manuell hinzufügen</string>
+    <string name="hidden_vault_no_tags">Keine Tags gefunden</string>
+    <string name="hidden_vault_save">Speichern</string>
+    <string name="hidden_vault_delete_area">Bereich löschen</string>
+    <string name="hidden_vault_library_taken">Bereits in %1$s</string>
+    <string name="hidden_vault_unavailable">Nicht verfügbar</string>
+    <string name="hidden_vault_empty">Hier ist nichts</string>
+    <string name="hidden_vault_done">Fertig</string>
+    <string name="hidden_vault_saving">Speichern…</string>
+</resources>

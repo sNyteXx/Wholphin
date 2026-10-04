@@ -1,0 +1,162 @@
+# Fork only (hidden content vault): builds the Android APKs and publishes them as a
+# pre-release, so a build can be installed on a device straight from GitHub.
+# Started in one of three ways:
+#   - a push that changes .github/fork-release, whose one line is the tag to
+#     create (e.g. fork-vault-1), on any branch
+#   - pushing a tag like fork-vault-1
+#   - a manual run with a tag (once this file is on the default branch)
+# None of these match upstream's release tags (v*), so only this workflow runs.
+name: Fork Android Release
+
+on:
+  push:
+    tags:
+      - 'fork-*'
+    branches:
+      - '**'
+    paths:
+      - '.github/fork-release'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to create, e.g. fork-vault-2
+        required: true
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs='-Xmx12g -XX:MaxMetaspaceSize=1024m'"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      # The version name and code come from upstream's v* tags, which a fork may not have
+      - name: Fetch upstream version tags
+        run: git fetch --no-tags https://github.com/damontecres/Wholphin.git '+refs/tags/v*:refs/tags/v*'
+
+      - name: Pick the release tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+          elif [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG=$(head -n 1 .github/fork-release | tr -d '[:space:]')
+          fi
+          case "$TAG" in
+            fork-*) ;;
+            *) echo "::error::Release tag must start with fork-, got '$TAG'"; exit 1 ;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Every runner creates its own debug key, and an app signed with another key can't be
+      # updated in place. A DEBUG_KEYSTORE_BASE64 secret (an Android debug.keystore, password
+      # "android") gives every build the same signature; without it the key is kept in the
+      # Actions cache, which works for later builds of the same branch.
+      - name: Restore debug key from secret
+        id: key
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 --decode > ~/.android/debug.keystore
+            echo "source=secret" >> "$GITHUB_OUTPUT"
+          else
+            echo "source=cache" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore debug key from cache
+        if: steps.key.outputs.source == 'cache'
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: fork-debug-keystore-v1
+
+      - name: Build
+        id: build
+        run: ./gradlew assembleDefaultDebug --no-daemon
+
+      - name: Unit tests
+        id: tests
+        continue-on-error: true
+        run: ./gradlew testDefaultDebugUnitTest --no-daemon
+
+      - name: Name the files after the tag
+        id: files
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          shopt -s globstar nullglob
+          for apk in app/build/outputs/apk/default/debug/*.apk; do
+            # Split APKs end in their ABI, the universal one has none
+            abi=$(basename "$apk" .apk | grep -oE '(arm64-v8a|armeabi-v7a|x86_64)$' || true)
+            name="Wholphin-${TAG}-${abi:-universal}.apk"
+            cp "$apk" "$name"
+            echo "$apk => $name"
+          done
+          ls Wholphin-"${TAG}"*.apk
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Write release notes
+        env:
+          TAG: ${{ steps.files.outputs.tag }}
+          KEY: ${{ steps.key.outputs.source }}
+          TESTS: ${{ steps.tests.outcome }}
+          SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          {
+            echo "Fork test build of \`${SHA:0:7}\` (\`${BRANCH}\`) with the hidden content vault (see \`docs/custom/hidden-content-vault.md\`)."
+            echo
+            echo "- **Phones, tablets, Android TV, most Fire TV:** \`Wholphin-${TAG}-arm64-v8a.apk\`"
+            echo "- **Older 32-bit devices:** \`Wholphin-${TAG}-armeabi-v7a.apk\`"
+            echo "- **Unsure:** \`Wholphin-${TAG}-universal.apk\`"
+            echo
+            echo "Debug build with the package name \`com.github.damontecres.wholphin.debug\`: it installs next to a regular Wholphin and doesn't touch it."
+            echo
+            if [ "$KEY" = "secret" ]; then
+              echo "Signed with this fork's debug key: later builds install over this one."
+            else
+              echo "Signed with a debug key kept in the Actions cache: later builds of this branch install over this one as long as the cache lives (7 days unused). If an update is refused, uninstall first."
+            fi
+            echo
+            if [ "$TESTS" = "success" ]; then
+              echo "Unit tests: passed."
+            else
+              echo "Unit tests: **failed** (see the workflow run). The APK was still published for testing."
+            fi
+          } > release-notes.md
+
+      - name: Publish pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.files.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Wholphin ${{ steps.files.outputs.tag }}
+          prerelease: true
+          body_path: release-notes.md
+          files: Wholphin-${{ steps.files.outputs.tag }}*.apk
+
+      - name: Fail when the unit tests failed
+        if: steps.tests.outcome != 'success'
+        run: |
+          echo "::error::Unit tests failed; the APK was published anyway"
+          exit 1
