@@ -149,10 +149,15 @@ data class IndexBuildStats(
 class HiddenIndexBuilder(
     private val source: HiddenIndexSource,
 ) {
+    /**
+     * @param previous the index of the same rules built earlier: a library whose query fails this
+     * time keeps its earlier entries instead of failing the whole build
+     */
     suspend fun build(
         policy: HiddenTagPolicy,
         nowMs: Long,
         stats: IndexBuildStats = IndexBuildStats(),
+        previous: HiddenContentIndex? = null,
     ): HiddenContentIndex =
         coroutineScope {
             val semaphore = Semaphore(CONCURRENCY)
@@ -167,9 +172,23 @@ class HiddenIndexBuilder(
                         null
                     }
                 }
+            val earlier = previous?.takeIf { it.fingerprint == policy.fingerprint }
             val perLibrary =
                 policy.rules.map { rule ->
-                    async { semaphore.withPermit { collect(rule, stats) } }
+                    async {
+                        semaphore.withPermit {
+                            try {
+                                collect(rule, stats)
+                            } catch (ex: CancellationException) {
+                                throw ex
+                            } catch (ex: Exception) {
+                                // Without an earlier answer for this library the build fails,
+                                // which keeps the cautious tag only fallback in place
+                                earlier ?: throw ex
+                                earlier.idsOf(libraryId = rule.libraryId).associateWith { HiddenEntry(rule.vaultId, rule.libraryId) }
+                            }
+                        }
+                    }
                 }
             val entries = mutableMapOf<String, HiddenEntry>()
             perLibrary.forEach { entries.putAll(it.await()) }

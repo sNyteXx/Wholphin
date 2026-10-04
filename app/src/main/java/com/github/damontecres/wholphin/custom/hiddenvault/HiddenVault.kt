@@ -26,6 +26,11 @@ class HiddenVault(
     val session: VaultSessionManager,
     val pins: VaultPinStore,
     private val appScope: CoroutineScope,
+    /**
+     * The signed in account right now. Read on every access so the first requests after a user
+     * switch are already judged by the new user's rules, not after an asynchronous update.
+     */
+    private val scopeSource: (() -> VaultScope?)? = null,
 ) : HiddenVaultRuntime {
     private val _activeScope = MutableStateFlow<VaultScope?>(null)
 
@@ -56,6 +61,7 @@ class HiddenVault(
 
     /** The service of the signed in account, created on first use */
     fun currentService(): HiddenContentService? {
+        scopeSource?.let { setActiveScope(it()) }
         val scope = _activeScope.value ?: return null
         return synchronized(lock) {
             service?.takeIf { it.scope == scope } ?: serviceFactory(scope).also { service = it }
@@ -68,7 +74,12 @@ class HiddenVault(
         return service.takeIf { it.isActive }
     }
 
-    override fun enteredVaults(): Set<String> = session.enteredVaults(_activeScope.value)
+    override fun loadedService(): HiddenContentService? = currentService()
+
+    override fun enteredVaults(): Set<String> {
+        scopeSource?.let { setActiveScope(it()) }
+        return session.enteredVaults(_activeScope.value)
+    }
 
     override fun noteVaultActivity(vaultId: String) {
         _activeScope.value?.let { session.touch(it, vaultId) }
@@ -97,6 +108,6 @@ class HiddenVault(
     }
 
     companion object {
-        const val LIBRARY_CHANGE_DEBOUNCE_MS = 5_000L
+        const val LIBRARY_CHANGE_DEBOUNCE_MS = 30_000L
     }
 }

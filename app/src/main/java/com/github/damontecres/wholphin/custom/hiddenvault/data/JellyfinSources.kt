@@ -4,6 +4,7 @@ import com.github.damontecres.wholphin.custom.hiddenvault.model.HiddenVaultConfi
 import com.github.damontecres.wholphin.custom.hiddenvault.model.ItemIds
 import com.github.damontecres.wholphin.custom.hiddenvault.visibility.ItemRef
 import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.model.api.DisplayPreferencesDto
@@ -26,23 +27,29 @@ class JellyfinIndexSource(
         limit: Int,
     ): IndexPage {
         val result =
-            rawApi.itemsApi
-                .getItems(
-                    GetItemsRequest(
-                        parentId = ItemIds.toUuid(libraryId),
-                        recursive = true,
-                        tags = tags,
-                        fields = listOf(ItemFields.TAGS),
-                        sortBy = listOf(ItemSortBy.SORT_NAME),
-                        sortOrder = listOf(SortOrder.ASCENDING),
-                        startIndex = startIndex,
-                        limit = limit,
-                        enableImages = false,
-                        imageTypeLimit = 0,
-                        enableUserData = false,
-                        enableTotalRecordCount = true,
-                    ),
-                ).content
+            try {
+                rawApi.itemsApi
+                    .getItems(
+                        GetItemsRequest(
+                            parentId = ItemIds.toUuid(libraryId),
+                            recursive = true,
+                            tags = tags,
+                            fields = listOf(ItemFields.TAGS),
+                            sortBy = listOf(ItemSortBy.SORT_NAME),
+                            sortOrder = listOf(SortOrder.ASCENDING),
+                            startIndex = startIndex,
+                            limit = limit,
+                            enableImages = false,
+                            imageTypeLimit = 0,
+                            enableUserData = false,
+                            enableTotalRecordCount = true,
+                        ),
+                    ).content
+            } catch (ex: InvalidStatusException) {
+                // A library deleted on the server holds nothing to hide
+                if (ex.status == 404) return IndexPage(emptyList(), 0)
+                throw ex
+            }
         return IndexPage(result.items.map { ItemRef.of(it) }, result.totalRecordCount)
     }
 

@@ -65,6 +65,9 @@ class HiddenContentService(
     private var initialSync: Deferred<Unit>? = null
     private var delayedRefresh: Job? = null
 
+    @Volatile
+    private var lastBuildFailureAt = 0L
+
     private val _generation = MutableStateFlow(0)
 
     /** Changes whenever the config or the index does; screens reload on it */
@@ -85,6 +88,13 @@ class HiddenContentService(
         private set
 
     val isActive: Boolean get() = policy.isActive
+
+    /**
+     * Whether this session's first look at the server copy of the config is over (or not needed),
+     * so an inactive policy really means "nothing hidden"
+     */
+    val syncSettled: Boolean
+        get() = remote == null || !deviceSettings.syncEnabled || initialSync?.isCompleted == true
 
     /** The current rules' fingerprint, for cache keys */
     val fingerprint: String get() = policy.fingerprint
@@ -262,6 +272,8 @@ class HiddenContentService(
             if (current.isStale(clock(), STALE_AFTER_MS)) refreshInBackground()
             return
         }
+        // A build that just failed isn't retried by every list; the tag only fallback answers
+        if (clock() - lastBuildFailureAt < RETRY_AFTER_FAILURE_MS) return
         try {
             withTimeoutOrNull(FIRST_BUILD_TIMEOUT_MS) { refreshIndex() }
         } catch (ex: CancellationException) {
@@ -269,6 +281,12 @@ class HiddenContentService(
         } catch (ex: Exception) {
             log.w("index build failed, tag only fallback", ex)
         }
+    }
+
+    /** Starts a background rebuild when the index is older than [maxAgeMs] */
+    fun refreshIfOlderThan(maxAgeMs: Long) {
+        val current = index ?: return
+        if (current.isStale(clock(), maxAgeMs)) refreshInBackground()
     }
 
     /** Starts a rebuild unless one is running, without waiting for it */
@@ -312,7 +330,16 @@ class HiddenContentService(
         val policy = this.policy
         if (!policy.isActive) return
         val stats = IndexBuildStats()
-        val built = HiddenIndexBuilder(indexSource).build(policy, startedAt, stats)
+        val built =
+            try {
+                HiddenIndexBuilder(indexSource).build(policy, startedAt, stats, index)
+            } catch (ex: CancellationException) {
+                throw ex
+            } catch (ex: Exception) {
+                lastBuildFailureAt = clock()
+                throw ex
+            }
+        lastBuildFailureAt = 0L
         indexBuilds++
         indexRequests += stats.requests
         log.d("index built: ${built.size} hidden, $stats")
@@ -442,6 +469,7 @@ class HiddenContentService(
         const val FIRST_BUILD_TIMEOUT_MS = 20_000L
         const val SUSPECT_REFRESH_TIMEOUT_MS = 6_000L
         const val RETRY_REFRESH_DELAY_MS = 20_000L
+        const val RETRY_AFTER_FAILURE_MS = 30_000L
 
         /** Containers sit in no library, so their own tags are the whole answer */
         val CONTAINER_TYPES = setOf("BoxSet", "Playlist")

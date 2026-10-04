@@ -12,6 +12,9 @@ interface HiddenVaultRuntime {
      */
     suspend fun activeService(): HiddenContentService?
 
+    /** The rules of the signed in account as they are right now, without waiting for anything */
+    fun loadedService(): HiddenContentService?
+
     /** The vaults of the signed in account that are unlocked and currently open */
     fun enteredVaults(): Set<String>
 

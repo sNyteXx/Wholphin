@@ -1,5 +1,6 @@
 package com.github.damontecres.wholphin.util
 
+import com.github.damontecres.wholphin.custom.hiddenvault.HiddenVaultHooks
 import com.github.damontecres.wholphin.data.model.BaseItem
 import com.github.damontecres.wholphin.ui.DEFAULT_PAGE_SIZE
 import kotlinx.coroutines.CoroutineScope
@@ -51,10 +52,18 @@ class ApiRequestPager<T>(
 ) : RequestPager<BaseItem>(scope, pageSize, cacheSize) {
     override suspend fun init(initialPosition: Int): ApiRequestPager<T> = super.init(initialPosition) as ApiRequestPager<T>
 
+    // hidden-vault: exact positions and totals around hidden content
+    private val hiddenVaultPaging = HiddenVaultHooks.pagingFor(api, request, requestHandler)
+
     override suspend fun fetchPage(
         pageNumber: Int,
         includeTotalCount: Boolean,
     ): QueryResult<BaseItem> {
+        // hidden-vault: exact positions and totals around hidden content
+        val visiblePage = hiddenVaultPaging?.fetchPage(pageNumber, pageSize, includeTotalCount)
+        if (visiblePage != null) {
+            return QueryResult(visiblePage.items.map { BaseItem(it, useSeriesForPrimary) }, visiblePage.totalCount)
+        }
         val newRequest =
             requestHandler.prepare(
                 request,

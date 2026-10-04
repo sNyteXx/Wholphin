@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.work.WorkManager
 import com.github.damontecres.wholphin.BuildConfig
 import com.github.damontecres.wholphin.R
+import com.github.damontecres.wholphin.custom.hiddenvault.HiddenVault
+import com.github.damontecres.wholphin.custom.hiddenvault.di.HiddenVaultModule
 import com.github.damontecres.wholphin.data.ServerRepository
 import com.github.damontecres.wholphin.services.SeerrApi
 import com.github.damontecres.wholphin.util.CoroutineContextApiClientFactory
@@ -19,6 +21,7 @@ import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import org.jellyfin.sdk.Jellyfin
 import org.jellyfin.sdk.android.androidDevice
+import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.util.AuthorizationHeaderBuilder
 import org.jellyfin.sdk.api.okhttp.OkHttpFactory
 import org.jellyfin.sdk.createJellyfin
@@ -151,7 +154,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun apiClient(jellyfin: Jellyfin) = jellyfin.createApi()
+    fun apiClient(
+        jellyfin: Jellyfin,
+        hiddenVault: dagger.Lazy<HiddenVault>, // hidden-vault: central visibility filter
+    ): ApiClient = HiddenVaultModule.wrap(jellyfin.createApi(), hiddenVault) // hidden-vault: central visibility filter
 
     @Provides
     @Singleton
