@@ -315,22 +315,14 @@ ersetzt.
 
 ## 15. Verifikationsstand und manuelle TV-Checkliste
 
-In der Cloud-Umgebung dieses Forks war Googles Maven-Repository (`dl.google.com`,
-`maven.google.com`) per Egress-Policy gesperrt; das Android-Gradle-Plugin und AndroidX lassen
-sich dort nicht laden. Deshalb:
+* **Verifiziert (CI)**: `./gradlew clean assembleDefaultDebug testDefaultDebugUnitTest` ist im
+  PR-Workflow des Forks grün – echtes AGP, Hilt/KSP, alle Upstream-Hook-Dateien und sämtliche
+  Unit-Tests (Upstream + die 115 Vault-Tests oben). ktlint 1.8.0/pre-commit sind sauber.
+* **Offen**: Bedienung auf einem echten Gerät (Checkliste unten).
 
-* **Verifiziert**: der komplette Domänen-/Visibility-/Session-Kern wurde mit Kotlin 2.4.20
-  gegen Jellyfin SDK 1.7.1 kompiliert und die Testsuite oben (115 Tests) ist grün
-  (Standalone-JVM-Projekt, das genau diese Quell- und Testdateien einbindet).
-  ktlint 1.8.0 ist sauber.
-* **Teilweise verifiziert**: die Android-Schicht (`ui/`, `di/`, `HiddenVaultHooks.kt` und der
-  `ApiRequestPager`-Hook) wurde mit dem echten Kotlin- und Compose-Compiler gegen
-  JetBrains-Compose-Artefakte sowie Stubs für tv-material3, Hilt-Android und die
-  Upstream-Wholphin-Symbole kompiliert (Signaturen aus den Wholphin-Quellen übernommen).
-  Nicht gelaufen sind AGP, Hilt-Codegenerierung (KSP) und die großen Upstream-Hook-Dateien
-  (`DestinationContent`, `PreferencesContent`, `PlaybackViewModel`, `AppPreference`,
-  `AppModule`; dort nur gelesen). Vor dem Merge daher lokal oder per CI:
-  `./gradlew assembleDefaultDebug testDefaultDebugUnitTest`.
+Der PR-Workflow (`.github/workflows/pr.yml`) holt im Fork vorher Upstreams `v*`-Tags, falls
+keine da sind: GitHubs Fork-Sync kopiert keine Tags, und `app/build.gradle.kts` bricht ohne
+sie bei `git describe` ab (Exit 128).
 
 **Test-APK über GitHub** (`.github/workflows/fork-android-release.yml`, nur im Fork): ein Push,
 der die eine Zeile in `.github/fork-release` ändert (z. B. `fork-vault-2`), baut
