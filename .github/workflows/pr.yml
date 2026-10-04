@@ -34,6 +34,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0 # Need the tags to build
+      # hidden-vault (fork): GitHub's fork sync never copies tags, and the version name needs v*
+      - name: Fetch upstream version tags when missing
+        run: |
+          if [ -z "$(git tag --list 'v*')" ]; then
+            git fetch --no-tags https://github.com/damontecres/Wholphin.git '+refs/tags/v*:refs/tags/v*'
+          fi
       - name: Setup
         uses: ./.github/actions/setup
       - name: Build app
