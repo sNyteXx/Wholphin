@@ -332,6 +332,14 @@ sich dort nicht laden. Deshalb:
   `AppModule`; dort nur gelesen). Vor dem Merge daher lokal oder per CI:
   `./gradlew assembleDefaultDebug testDefaultDebugUnitTest`.
 
+**Test-APK über GitHub** (`.github/workflows/fork-android-release.yml`, nur im Fork): ein Push,
+der die eine Zeile in `.github/fork-release` ändert (z. B. `fork-vault-2`), baut
+`assembleDefaultDebug`, lässt die Unit-Tests laufen und veröffentlicht die APKs als Pre-Release
+mit diesem Tag. Voraussetzung: *Actions* sind im Fork aktiviert. Der Debug-Build hat die
+Paket-ID `….debug` und installiert sich neben einer normalen Wholphin. Für Updates ohne
+Deinstallation optional ein Secret `DEBUG_KEYSTORE_BASE64` (Android-`debug.keystore`, base64)
+anlegen; sonst wird der Schlüssel im Actions-Cache des Branches gehalten.
+
 Manuelle Prüfung auf Android TV / Fire TV (D-Pad):
 
 1. Einstellungen → Über → *Gerät*: PIN festlegen (nur Pfeile), wiederholen; falsche PIN 6×
