@@ -27,13 +27,17 @@ object TagPickerModel {
         return result
     }
 
-    /** The rows to show: extras first, then the server's tags, narrowed by [filter] */
+    /**
+     * The rows to show: extras first, then the server's tags, narrowed by [filter]. Never lists a
+     * tag twice (the list is keyed by tag).
+     */
     fun rows(
         serverTags: List<String>,
         extras: List<String>,
         filter: String,
     ): List<String> {
-        val all = extras + serverTags
+        val seen = HashSet<String>()
+        val all = (extras + serverTags).filter { seen.add(TagMatch.normalize(it)) }
         val needle = filter.trim().lowercase()
         return if (needle.isEmpty()) all else all.filter { it.lowercase().contains(needle) }
     }

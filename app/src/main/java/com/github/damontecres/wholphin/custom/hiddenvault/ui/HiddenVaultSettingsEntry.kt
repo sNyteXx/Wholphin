@@ -20,6 +20,7 @@ import com.github.damontecres.wholphin.preferences.AppPreferences
 import com.github.damontecres.wholphin.services.NavigationManager
 import com.github.damontecres.wholphin.ui.nav.Destination
 import com.github.damontecres.wholphin.ui.preferences.ClickPreference
+import com.github.damontecres.wholphin.util.ExceptionHandler
 import com.github.damontecres.wholphin.util.WholphinDispatchers
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -124,7 +125,7 @@ class VaultPinViewModel
             val prompt = _state.value ?: return
             val scope = vault.activeScope.value ?: return dismiss()
             _state.update { it?.copy(busy = true) }
-            viewModelScope.launch {
+            viewModelScope.launch(ExceptionHandler()) {
                 when (prompt.stage) {
                     PinStage.VERIFY -> {
                         val result = withContext(WholphinDispatchers.Default) { vault.pins.verify(scope, pin) }

@@ -207,7 +207,10 @@ private fun TagPicker(
     }
     // Tags typed by hand stay in the list for the whole visit, so ticking never moves a row
     var extras by remember { mutableStateOf(emptyList<String>()) }
-    LaunchedEffect(selected, tags) { extras = TagPickerModel.extras(selected, tags.orEmpty(), extras) }
+    LaunchedEffect(selected, tags) {
+        // Only once the server's tags are known, or every selected tag would count as typed
+        if (tags != null) extras = TagPickerModel.extras(selected, tags, extras)
+    }
     val selectedNormalized = remember(selected) { selected.map(TagMatch::normalize).toSet() }
     val shown = remember(tags, extras, appliedFilter) { TagPickerModel.rows(tags.orEmpty(), extras, appliedFilter) }
     val firstFocus = remember { FocusRequester() }
@@ -327,13 +330,23 @@ class VaultEditorViewModel
             viewModelScope.launchIO {
                 val config = service.config
                 val current = editVaultId?.let { config.vault(it) }
-                val libraries =
+                val views =
                     rawApi.userViewsApi
                         .getUserViews()
                         .content.items
                         .mapNotNull { view ->
                             ItemIds.of(view.id)?.let { EditorLibrary(it, view.name.orEmpty(), view.collectionType?.serialName) }
                         }
+                // Configured libraries the views don't list (hidden from the home screen, say)
+                // must not be dropped by the next save
+                val known = views.mapTo(HashSet()) { it.id }
+                val libraries =
+                    views +
+                        current
+                            ?.libraries
+                            .orEmpty()
+                            .filter { it.libraryId !in known }
+                            .map { EditorLibrary(it.libraryId, it.name, it.collectionType) }
                 val takenBy =
                     config.vaults
                         .filter { it.id != editVaultId }

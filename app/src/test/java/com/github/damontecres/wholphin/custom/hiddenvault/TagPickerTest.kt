@@ -31,6 +31,15 @@ class TagPickerTest {
     }
 
     @Test
+    fun `a tag never shows twice, even when it was typed before the server list arrived`() {
+        // extras computed while the server's tags were still loading
+        val stale = TagPickerModel.extras(listOf("Anime"), emptyList(), emptyList())
+        val rows = TagPickerModel.rows(listOf("anime", "Kids", "Private"), stale, "")
+        assertEquals(rows.size, rows.map { it.lowercase() }.toSet().size)
+        assertEquals(3, rows.size)
+    }
+
+    @Test
     fun `the filter narrows case insensitively`() {
         val rows = TagPickerModel.rows(serverTags, emptyList(), "genre 12")
         assertEquals((120 until 130).map { "Genre %03d".format(it) }, rows)

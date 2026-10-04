@@ -320,12 +320,17 @@ In der Cloud-Umgebung dieses Forks war Googles Maven-Repository (`dl.google.com`
 sich dort nicht laden. Deshalb:
 
 * **Verifiziert**: der komplette Domänen-/Visibility-/Session-Kern wurde mit Kotlin 2.4.20
-  gegen Jellyfin SDK 1.7.1 kompiliert und die Testsuite oben (114 Tests) ist grün
+  gegen Jellyfin SDK 1.7.1 kompiliert und die Testsuite oben (115 Tests) ist grün
   (Standalone-JVM-Projekt, das genau diese Quell- und Testdateien einbindet).
   ktlint 1.8.0 ist sauber.
-* **Nicht in der Cloud kompiliert**: die Android-Schicht (`ui/`, `di/`,
-  `HiddenVaultHooks.kt`, die sieben Hook-Dateien). Vor dem Merge lokal:
-  `./gradlew :app:assembleDebug :app:testDebugUnitTest`.
+* **Teilweise verifiziert**: die Android-Schicht (`ui/`, `di/`, `HiddenVaultHooks.kt` und der
+  `ApiRequestPager`-Hook) wurde mit dem echten Kotlin- und Compose-Compiler gegen
+  JetBrains-Compose-Artefakte sowie Stubs für tv-material3, Hilt-Android und die
+  Upstream-Wholphin-Symbole kompiliert (Signaturen aus den Wholphin-Quellen übernommen).
+  Nicht gelaufen sind AGP, Hilt-Codegenerierung (KSP) und die großen Upstream-Hook-Dateien
+  (`DestinationContent`, `PreferencesContent`, `PlaybackViewModel`, `AppPreference`,
+  `AppModule`; dort nur gelesen). Vor dem Merge daher lokal oder per CI:
+  `./gradlew assembleDefaultDebug testDefaultDebugUnitTest`.
 
 Manuelle Prüfung auf Android TV / Fire TV (D-Pad):
 
