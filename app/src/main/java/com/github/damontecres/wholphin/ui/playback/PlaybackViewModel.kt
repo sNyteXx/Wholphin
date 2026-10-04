@@ -27,6 +27,8 @@ import androidx.media3.session.MediaSession
 import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.size.Size
+import com.github.damontecres.wholphin.R
+import com.github.damontecres.wholphin.custom.hiddenvault.HiddenVaultHooks
 import com.github.damontecres.wholphin.data.ItemPlaybackDao
 import com.github.damontecres.wholphin.data.ItemPlaybackRepository
 import com.github.damontecres.wholphin.data.ServerRepository
@@ -462,6 +464,11 @@ class PlaybackViewModel
                         "Unsupported type '${item.type}', skipping...",
                         Toast.LENGTH_SHORT,
                     )
+                    return@withContext false
+                }
+                // hidden-vault: playback gate, checked again for every item about to play
+                if (HiddenVaultHooks.refusesPlayback(api, item.data)) {
+                    showToast(context, context.getString(R.string.hidden_vault_unavailable), Toast.LENGTH_SHORT)
                     return@withContext false
                 }
                 this@PlaybackViewModel.currentItem = playlistItem

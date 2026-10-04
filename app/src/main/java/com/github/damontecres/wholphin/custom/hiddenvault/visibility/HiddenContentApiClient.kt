@@ -21,6 +21,7 @@ import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.sockets.SocketApi
 import org.jellyfin.sdk.model.ClientInfo
 import org.jellyfin.sdk.model.DeviceInfo
+import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.PlaybackProgressInfo
 import org.jellyfin.sdk.model.api.PlaybackStartInfo
@@ -127,6 +128,30 @@ class HiddenContentApiClient(
             val ref = recent[id] ?: lookup(itemId)
             refused(ref, service, runtime)
         }
+    }
+
+    /**
+     * Items the vault's own screens loaded over the unfiltered client, so opening or playing one
+     * of them is decided without another lookup
+     */
+    fun rememberItems(items: List<BaseItemDto>) {
+        items.forEach { recent.put(ItemRef.of(it)) }
+    }
+
+    /**
+     * The detail gate's answer without waiting, when it is already known: true when [itemId] may
+     * open, false when it may not, null when only [refusesPlayback] can tell.
+     */
+    fun quickAccess(itemId: UUID): Boolean? {
+        val runtime = runtimeProvider() ?: return true
+        val service = runtime.loadedService() ?: return true
+        if (!service.isActive) return if (service.syncSettled) true else null
+        val id = ItemIds.of(itemId) ?: return true
+        val ref = recent[id] ?: service.vaultOfId(id)?.let { ItemRef(id) } ?: return null
+        val verdict = service.verdict(ref)
+        if (verdict !is Verdict.Hidden) return true
+        if (verdict.suspectId != null) return null
+        return VaultAllowance.of(AllowanceKind.SELF, id, service, runtime).allows(ref, verdict.vaultId)
     }
 
     /** Same as [refusesPlayback] for an item already in hand */
