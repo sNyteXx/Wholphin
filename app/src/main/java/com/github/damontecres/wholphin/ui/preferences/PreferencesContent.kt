@@ -46,6 +46,8 @@ import androidx.tv.material3.surfaceColorAtElevation
 import coil3.SingletonImageLoader
 import coil3.imageLoader
 import com.github.damontecres.wholphin.R
+import com.github.damontecres.wholphin.custom.hiddenvault.ui.HiddenVaultSettings
+import com.github.damontecres.wholphin.custom.hiddenvault.ui.HiddenVaultSettingsEntry
 import com.github.damontecres.wholphin.preferences.AppPreference
 import com.github.damontecres.wholphin.preferences.AppPreferences
 import com.github.damontecres.wholphin.preferences.AppSwitchPreference
@@ -296,6 +298,11 @@ fun PreferencesContent(
                                 }
                             }
                             when (pref) {
+                                // hidden-vault: the unobtrusive way in
+                                HiddenVaultSettings.Entry -> {
+                                    HiddenVaultSettingsEntry(interactionSource, focusModifier)
+                                }
+
                                 AppPreference.InstalledVersion -> {
                                     ClickPreference(
                                         title = stringResource(R.string.installed_version),

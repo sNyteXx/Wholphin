@@ -8,6 +8,7 @@ import androidx.preference.PreferenceManager
 import com.github.damontecres.wholphin.BuildConfig
 import com.github.damontecres.wholphin.R
 import com.github.damontecres.wholphin.WholphinApplication
+import com.github.damontecres.wholphin.custom.hiddenvault.ui.HiddenVaultSettings
 import com.github.damontecres.wholphin.services.UpdateChecker
 import com.github.damontecres.wholphin.ui.nav.Destination
 import com.github.damontecres.wholphin.ui.preferences.ConditionalPreferences
@@ -1159,6 +1160,7 @@ val basicPreferences =
             preferences =
                 buildList {
                     add(AppPreference.InstalledVersion)
+                    add(HiddenVaultSettings.Entry) // hidden-vault: the unobtrusive way in
                     if (UpdateChecker.ACTIVE) {
                         add(AppPreference.Update)
                     }
