@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- hidden-vault: strings of the fork's hidden content vault. Kept out of strings.xml so
+     upstream and Weblate changes never conflict with them. -->
+<resources>
+    <string name="hidden_vault_entry_title">Device</string>
+    <string name="hidden_vault_pin_title">Enter PIN</string>
+    <string name="hidden_vault_pin_create">Choose a PIN</string>
+    <string name="hidden_vault_pin_confirm">Repeat the PIN</string>
+    <string name="hidden_vault_pin_hint">4 digits or arrows</string>
+    <string name="hidden_vault_pin_mismatch">The PINs don\'t match</string>
+    <string name="hidden_vault_pin_wrong">Wrong PIN</string>
+    <string name="hidden_vault_pin_locked">Too many attempts. Try again in %1$d s</string>
+    <string name="hidden_vault_private_area">Private area</string>
+    <string name="hidden_vault_areas">Areas</string>
+    <string name="hidden_vault_no_areas">No areas yet</string>
+    <string name="hidden_vault_add_area">Add area</string>
+    <string name="hidden_vault_edit_area">Edit %1$s</string>
+    <string name="hidden_vault_settings">Settings</string>
+    <string name="hidden_vault_this_device">This device</string>
+    <string name="hidden_vault_auto_lock">Lock after inactivity</string>
+    <string name="hidden_vault_minutes">%1$d min</string>
+    <string name="hidden_vault_lock_on_leave">Lock when leaving</string>
+    <string name="hidden_vault_hide_watched">Hide watched</string>
+    <string name="hidden_vault_hide_watched_summary">Rows, grids and search only list unwatched titles</string>
+    <string name="hidden_vault_sync">Sync with other devices</string>
+    <string name="hidden_vault_change_pin">Change PIN</string>
+    <string name="hidden_vault_lock_now">Lock</string>
+    <string name="hidden_vault_on">On</string>
+    <string name="hidden_vault_off">Off</string>
+    <string name="hidden_vault_continue_watching">Continue watching</string>
+    <string name="hidden_vault_next_up">Next up</string>
+    <string name="hidden_vault_recently_added">Recently added</string>
+    <string name="hidden_vault_search">Search</string>
+    <string name="hidden_vault_libraries">Libraries</string>
+    <string name="hidden_vault_name">Name</string>
+    <string name="hidden_vault_hidden_tags">Hidden tags in %1$s</string>
+    <string name="hidden_vault_tags_selected">%1$d selected</string>
+    <string name="hidden_vault_filter_tags">Filter tags</string>
+    <string name="hidden_vault_add_tag">Add tag manually</string>
+    <string name="hidden_vault_no_tags">No tags found</string>
+    <string name="hidden_vault_save">Save</string>
+    <string name="hidden_vault_delete_area">Delete area</string>
+    <string name="hidden_vault_library_taken">Already in %1$s</string>
+    <string name="hidden_vault_unavailable">Not available</string>
+    <string name="hidden_vault_empty">Nothing here</string>
+    <string name="hidden_vault_done">Done</string>
+    <string name="hidden_vault_saving">Saving…</string>
+</resources>

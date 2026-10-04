@@ -3,6 +3,7 @@
 package com.github.damontecres.wholphin.ui.nav
 
 import androidx.navigation3.runtime.NavKey
+import com.github.damontecres.wholphin.custom.hiddenvault.ui.VaultRoute
 import com.github.damontecres.wholphin.data.filter.DiscoverFilter
 import com.github.damontecres.wholphin.data.model.BaseItem
 import com.github.damontecres.wholphin.data.model.CollectionFolderFilter
@@ -174,4 +175,10 @@ sealed class Destination(
 
     @Serializable
     data object Debug : Destination(true)
+
+    // hidden-vault: every page of the fork's hidden content vault (see custom/hiddenvault)
+    @Serializable
+    data class HiddenVault(
+        val route: VaultRoute,
+    ) : Destination(true)
 }
